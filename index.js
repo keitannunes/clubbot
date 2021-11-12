@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { Client, Intents } = require('discord.js'); //stole from stackoverflow
+const { Client, Intents } = require('discord.js'); //stole from stackoverflow can't use const discord = require("discord.js"); anymore :(
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] }); //??????????
 const axios = require("axios");
 const { MessageEmbed } = require('discord.js');
