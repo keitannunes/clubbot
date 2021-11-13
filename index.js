@@ -31,6 +31,17 @@ const balance = supabase
     })
     .subscribe()
 //functions
+function rng(min, max) {
+    return Math.round(max / (Math.random() * max + min));
+}
+
+async function signedUp(id) {
+    const { data } = await supabase
+        .from('balance')
+        .select('id')
+        .eq('id', id)
+    return (typeof data[0] !== "undefined")
+}
 
 client.on("messageCreate", async message => {
     const messageLower = message.content.toLowerCase();
@@ -40,7 +51,7 @@ client.on("messageCreate", async message => {
         .split(/ +/g);
     const command = args.shift().toLowerCase();
     if (message.author.bot) return; //if message author is a bot
-    if (message.author.id != "239400603346796544" && message.author.id != "296785190792069120") return; //message not sent by me
+    //if (message.author.id != "239400603346796544" && message.author.id != "296785190792069120") return; //message not sent by me
     if (message.content.indexOf(process.env.PREFIX) !== 0) return; //message doesn't have prefix
     const output = await message.channel.send("Thinking..."); //message that'll be edited later
     const mention = message.mentions.users.first();
@@ -51,20 +62,13 @@ client.on("messageCreate", async message => {
             );
         }
             break;
-
         case "balance": {
             if (mention) {
-                let { data, err } = await supabase
-                    .from('balance')
-                    .select('value')
-                    .eq('id', mention.id)
-
-                if (err) {
-                    console.log(err)
-                    output.edit(output.edit("There was an error processing your request"))
-                }
-                console.log(data)
-                if (typeof data[0] !== "undefined") {
+                if (await signedUp(mention.id)) {
+                    let { data } = await supabase
+                        .from('balance')
+                        .select('value')
+                        .eq('id', mention.id)
                     output.edit(String(data[0].value))
                 } else {
                     output.edit("This user has not signed up yet")
@@ -79,8 +83,8 @@ client.on("messageCreate", async message => {
                     console.log(err)
                     output.edit(output.edit("There was an error processing your request"))
                 }
-                if (typeof data[0] !== "undefined") {
-                    output.edit(String(data[0].value))
+                if (await signedUp(message.author.id)) {
+                    output.edit(`${message.author.username}'s bank balance is: $${data[0].value}`)
                 } else {
                     output.edit("You have not signed up yet")
                 }
@@ -89,11 +93,7 @@ client.on("messageCreate", async message => {
             break;
 
         case "signup": {
-            let { data } = await supabase
-                .from('balance')
-                .select('id')
-                .eq('id', message.author.id)
-            if (typeof data[0] == "undefined") { //check if new person is not already in the database
+            if (!await signedUp(message.author.id)) { //check if new person is not already in the database
                 await supabase
                     .from('balance')
                     .insert([
@@ -107,44 +107,76 @@ client.on("messageCreate", async message => {
             break;
 
         case "setbalance": {
+            if (message.author.id != "239400603346796544" && message.author.id != "296785190792069120") break; //message not sent by me
             if (!mention) {
                 output.edit("Please mention someone")
-                break; 
+                break;
             }
-            await supabase
-                .from('balance')
-                .update({ value: args[1] })
-                .eq('id', mention.id)
-            output.edit(`Set ${mention.username}'s balance to ${args[1]}`)
+            if (await signedUp(mention.id)) {
+                await supabase
+                    .from('balance')
+                    .update({ value: args[1] })
+                    .eq('id', mention.id)
+                output.edit(`Set ${mention.username}'s balance to ${args[1]}`)
+            } else {
+                output.edit("User is not signed up!")
+            }
         }
             break;
 
         case "delete": {
+            if (message.author.id != "239400603346796544" && message.author.id != "296785190792069120") break; //message not sent by me
             if (!mention) {
                 output.edit("Please mention someone")
-                break; 
+                break;
             }
             output.edit(`Please type "yes" to confirm deleting ${mention.username}'s data'`)
             const filter = (m) => { //define filter 
                 return m.author.id === message.author.id
-              };
+            };
             const collector = message.channel.createMessageCollector(filter, { time: 30000, max: 1 }); // declare collector with max wait time 15 sec and 1 reply
             collector.on('collect', async m => {//runs when collected something
-                if (m.content == "yes"){
+                if (m.content == "yes") {
                     const { data } = await supabase
-                    .from('balance')
-                    .delete()
-                    .eq('id', mention.id)
+                        .from('balance')
+                        .delete()
+                        .eq('id', mention.id)
                     output.edit(`deleted ${mention.username}'s data'`)
                 } else {
                     output.edit("Failed to delete: Confirmation failed");
                 }
             })
             collector.on('end', collected => { //runs when collector stops collecting
-            if (collected.size === 0){
-                output.edit("Collector expired")
-            }
+                if (collected.size === 0) {
+                    output.edit("Collector expired")
+                }
             });
+        }
+            break
+        case "work": {
+            if (await signedUp(message.author.id)) {
+                const rng = Math.random()
+                if (rng > 0.8) {
+                    salary = Math.round((0.85 + Math.random()) * 10000)
+                } else if (0.8 > rng && rng > 0.5) {
+                    salary = Math.round((Math.min(0.85, Math.max(0.6, Math.random()))) * 10000 + Math.random() * 1000)
+                } else {
+                    salary = Math.round((Math.min(0.55, Math.max(0.1, Math.random()))) * 10000 + Math.random() * 1000)
+                }
+                //get old balance
+                let { data } = await supabase
+                .from('balance')
+                .select('value')
+                .eq('id', message.author.id)
+                //add salary to balance
+                await supabase
+                    .from('balance')
+                    .update({ value: data[0].value + salary })
+                    .eq('id', message.author.id)
+                output.edit(`You earned $${salary}!`)
+            } else {
+                output.edit("You are not signed up (use !signup to signup)")
+            }
         }
             break
         default:
