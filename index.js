@@ -30,9 +30,17 @@ const balance = supabase
         console.log('Change received!', payload)
     })
     .subscribe()
+
+//hashtables
+const workCooldown = new Map()
+
 //functions
 function rng(min, max) {
     return Math.round(max / (Math.random() * max + min));
+}
+
+function addCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //thank you stackoverflow
 }
 
 async function signedUp(id) {
@@ -40,7 +48,7 @@ async function signedUp(id) {
         .from('balance')
         .select('id')
         .eq('id', id)
-    return (typeof data[0] !== "undefined")
+    return typeof data[0] !== "undefined"
 }
 
 client.on("messageCreate", async message => {
@@ -62,19 +70,30 @@ client.on("messageCreate", async message => {
             );
         }
             break;
+        case "bal":
         case "balance": {
             if (mention) {
                 if (await signedUp(mention.id)) {
-                    let { data } = await supabase
+                    const { data } = await supabase
                         .from('balance')
                         .select('value')
                         .eq('id', mention.id)
-                    output.edit(String(data[0].value))
+                    output.delete();
+                    message.channel.send({
+                        embeds: [{
+                            color: "#00c8b2",
+                            author: {
+                                name: mention.username,
+                                icon_url: mention.avatarURL(),
+                            },
+                            description: `${mention.username}'s bank balance is: $${addCommas(data[0].value)}`
+                        }]
+                    })
                 } else {
                     output.edit("This user has not signed up yet")
                 }
             } else {
-                let { data, err } = await supabase
+                const { data, err } = await supabase
                     .from('balance')
                     .select('value')
                     .eq('id', message.author.id)
@@ -84,9 +103,20 @@ client.on("messageCreate", async message => {
                     output.edit(output.edit("There was an error processing your request"))
                 }
                 if (await signedUp(message.author.id)) {
-                    output.edit(`${message.author.username}'s bank balance is: $${data[0].value}`)
+                    output.delete();
+                    message.channel.send({
+                        embeds: [{
+                            color: "#00c8b2",
+                            author: {
+                                name: message.author.username,
+                                icon_url: message.author.avatarURL(),
+                            },
+                            description: `Your bank balance is: $${addCommas(data[0].value)}`
+                        }]
+                    })
+                    //output.edit(`${message.author.username}'s bank balance is: $${addCommas(data[0].value)}`)
                 } else {
-                    output.edit("You have not signed up yet")
+                    output.edit("You have not signed up yet (use ,signup)")
                 }
             }
         }
@@ -107,7 +137,10 @@ client.on("messageCreate", async message => {
             break;
 
         case "setbalance": {
-            if (message.author.id != "239400603346796544" && message.author.id != "296785190792069120") break; //message not sent by me
+            if (message.author.id != "239400603346796544" && message.author.id != "296785190792069120") {
+                output.edit("You dont have the required perms to use that command!")
+                break;
+            }
             if (!mention) {
                 output.edit("Please mention someone")
                 break;
@@ -125,7 +158,10 @@ client.on("messageCreate", async message => {
             break;
 
         case "delete": {
-            if (message.author.id != "239400603346796544" && message.author.id != "296785190792069120") break; //message not sent by me
+            if (message.author.id != "239400603346796544" && message.author.id != "296785190792069120") {
+                output.edit("You dont have the required perms to use that command!")
+                break; //message not sent by me
+            }
             if (!mention) {
                 output.edit("Please mention someone")
                 break;
@@ -154,31 +190,196 @@ client.on("messageCreate", async message => {
         }
             break
         case "work": {
+
             if (await signedUp(message.author.id)) {
+                if (workCooldown.get(message.author.id) + 60000 > Date.now()) {
+                    output.delete()
+                    message.channel.send({
+                        embeds: [{
+                            color: "#e32a00",
+                            author: {
+                                name: message.author.username,
+                                icon_url: message.author.avatarURL(),
+                            },
+                            description: `You have to wait ${Math.round((workCooldown.get(message.author.id) + 60000 - Date.now()) / 1000)} seconds!`
+                        }]
+                    })
+                    break;
+                }
                 const rng = Math.random()
-                if (rng > 0.8) {
-                    salary = Math.round((0.85 + Math.random()) * 10000)
-                } else if (0.8 > rng && rng > 0.5) {
+                if (rng >= 0.9) {
+                    salary = Math.round((0.70 + Math.random()) * 10000)
+                } else if (0.9 > rng && rng >= 0.6) {
                     salary = Math.round((Math.min(0.85, Math.max(0.6, Math.random()))) * 10000 + Math.random() * 1000)
                 } else {
                     salary = Math.round((Math.min(0.55, Math.max(0.1, Math.random()))) * 10000 + Math.random() * 1000)
                 }
                 //get old balance
-                let { data } = await supabase
-                .from('balance')
-                .select('value')
-                .eq('id', message.author.id)
+                const { data } = await supabase
+                    .from('balance')
+                    .select('value')
+                    .eq('id', message.author.id)
                 //add salary to balance
                 await supabase
                     .from('balance')
                     .update({ value: data[0].value + salary })
                     .eq('id', message.author.id)
-                output.edit(`You earned $${salary}!`)
+                workCooldown.set(message.author.id, Date.now()) //set cooldown start time
+                output.delete();
+                message.channel.send({
+                    embeds: [{
+                        color: "#41ab1e",
+                        author: {
+                            name: message.author.username,
+                            icon_url: message.author.avatarURL(),
+                        },
+                        description: `You earned $${addCommas(salary)}!`
+                    }]
+                })
             } else {
-                output.edit("You are not signed up (use !signup to signup)")
+                output.edit("You are not signed up (use ,signup to signup)")
             }
         }
             break
+        case "cf":
+        case "coinflip":
+            if (!await signedUp(message.author.id)) {
+                output.delete()
+                message.channel.send({
+                    embeds: [{
+                        color: "#e32a00",
+                        author: {
+                            name: message.author.username,
+                            icon_url: message.author.avatarURL(),
+                        },
+                        description: `You are not signed up (use ,signup to signup)`
+                    }]
+                })
+                break;
+            }
+            if (args[0] % 1 !== 0 || args <= 0) {
+                output.delete()
+                message.channel.send({
+                    embeds: [{
+                        color: "#e32a00",
+                        author: {
+                            name: message.author.username,
+                            icon_url: message.author.avatarURL(),
+                        },
+                        description: `Please bet a positive integer`
+                    }]
+                })
+                break;
+            }
+            const { data } = await supabase
+                        .from('balance')
+                        .select('value')
+                        .eq('id', message.author.id)
+            if (args[0] > data[0].value) {
+                output.delete()
+                message.channel.send({
+                    embeds: [{
+                        color: "#e32a00",
+                        author: {
+                            name: message.author.username,
+                            icon_url: message.author.avatarURL(),
+                        },
+                        description: `You have insufficient funds!`
+                    }]
+                })
+                break;
+            }
+            if (Math.random() < 0.5) { //tails
+                if (args[1] == "tails" || args[1] == "t") {
+                    //add winnings to balance
+                    const winnings = data[0].value + parseInt(args[0])
+                    await supabase
+                        .from('balance')
+                        .update({ value: winnings})
+                        .eq('id', message.author.id)
+                    output.delete();
+                    message.channel.send({
+                        embeds: [{
+                            color: "#41ab1e",
+                            author: {
+                                name: message.author.username,
+                                icon_url: message.author.avatarURL(),
+                            },
+                            description: `Tails! You won $${addCommas(args[0])}!`
+                        }]
+                    })
+                } else if (args[1] == "heads" || args[1] == "h") {
+                    //deduct winnings to balance
+                    const losses = data[0].value - parseInt(args[0])
+                    await supabase
+                        .from('balance')
+                        .update({ value: losses })
+                        .eq('id', message.author.id)
+                    output.delete();
+                    message.channel.send({
+                        embeds: [{
+                            color: "#ff0000",
+                            author: {
+                                name: message.author.username,
+                                icon_url: message.author.avatarURL(),
+                            },
+                            description: `Tails! You lost $${addCommas(args[0])}`
+                        }]
+                    })
+                }
+            } else {
+                if (args[1] == "heads" || args[1] == "h") {
+                    //add winnings to balance
+                    const winnings = data[0].value + parseInt(args[0])
+                    await supabase
+                        .from('balance')
+                        .update({ value: winnings})
+                        .eq('id', message.author.id)
+                    output.delete();
+                    message.channel.send({
+                        embeds: [{
+                            color: "#41ab1e",
+                            author: {
+                                name: message.author.username,
+                                icon_url: message.author.avatarURL(),
+                            },
+                            description: `Heads! You won $${addCommas(args[0])}!`
+                        }]
+                    })
+                } else if (args[1] == "tails" || args[1] == "t") {
+                    //deduct winnings to balance
+                    const losses = data[0].value - parseInt(args[0])
+                    await supabase
+                        .from('balance')
+                        .update({ value: losses })
+                        .eq('id', message.author.id)
+                    output.delete();
+                    message.channel.send({
+                        embeds: [{
+                            color: "#ff0000",
+                            author: {
+                                name: message.author.username,
+                                icon_url: message.author.avatarURL(),
+                            },
+                            description: `Tails! You lost $${addCommas(args[0])}`
+                        }]
+                    })
+                } else {
+                    output.delete()
+                    message.channel.send({
+                        embeds: [{
+                            color: "#e32a00",
+                            author: {
+                                name: message.author.username,
+                                icon_url: message.author.avatarURL(),
+                            },
+                            description: `Please predict either heads, h, tails or t`
+                        }]
+                    })
+                    break;
+                }
+            }
+            break;
         default:
             output.edit("That's not a command!")
     }
