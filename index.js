@@ -241,8 +241,9 @@ client.on("messageCreate", async message => {
             }
         }
             break
+        case "bet":
         case "cf":
-        case "coinflip":
+        case "coinflip": {
             if (!await signedUp(message.author.id)) {
                 output.delete()
                 message.channel.send({
@@ -257,7 +258,7 @@ client.on("messageCreate", async message => {
                 })
                 break;
             }
-            if (args[0] % 1 !== 0 || args <= 0) {
+            if (args[0] % 1 !== 0 || args[0] <= 0) {
                 output.delete()
                 message.channel.send({
                     embeds: [{
@@ -271,6 +272,7 @@ client.on("messageCreate", async message => {
                 })
                 break;
             }
+
             const { data } = await supabase
                         .from('balance')
                         .select('value')
@@ -290,7 +292,7 @@ client.on("messageCreate", async message => {
                 break;
             }
             if (Math.random() < 0.5) { //tails
-                if (args[1] == "tails" || args[1] == "t") {
+                if (args[1] == "tails" || args[1] == "t") { //if tails and bet tails
                     //add winnings to balance
                     const winnings = data[0].value + parseInt(args[0])
                     await supabase
@@ -308,7 +310,7 @@ client.on("messageCreate", async message => {
                             description: `Tails! You won $${addCommas(args[0])}!`
                         }]
                     })
-                } else if (args[1] == "heads" || args[1] == "h") {
+                } else if (args[1] == "heads" || args[1] == "h") { // if tails and bet heads
                     //deduct winnings to balance
                     const losses = data[0].value - parseInt(args[0])
                     await supabase
@@ -326,9 +328,22 @@ client.on("messageCreate", async message => {
                             description: `Tails! You lost $${addCommas(args[0])}`
                         }]
                     })
+                } else {
+                    output.delete()
+                    message.channel.send({
+                        embeds: [{
+                            color: "#e32a00",
+                            author: {
+                                name: message.author.username,
+                                icon_url: message.author.avatarURL(),
+                            },
+                            description: `Please predict either heads, h, tails or t`
+                        }]
+                    })
+                    break;
                 }
             } else {
-                if (args[1] == "heads" || args[1] == "h") {
+                if (args[1] == "heads" || args[1] == "h") { //if heads and bet heads
                     //add winnings to balance
                     const winnings = data[0].value + parseInt(args[0])
                     await supabase
@@ -346,7 +361,7 @@ client.on("messageCreate", async message => {
                             description: `Heads! You won $${addCommas(args[0])}!`
                         }]
                     })
-                } else if (args[1] == "tails" || args[1] == "t") {
+                } else if (args[1] == "tails" || args[1] == "t") { //if tails and bet tails
                     //deduct winnings to balance
                     const losses = data[0].value - parseInt(args[0])
                     await supabase
@@ -379,6 +394,7 @@ client.on("messageCreate", async message => {
                     break;
                 }
             }
+        }
             break;
         default:
             output.edit("That's not a command!")
