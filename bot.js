@@ -1,6 +1,6 @@
 const fs = require("fs");
 const { Client, Collection, Intents, MessageActionRow, MessageButton, MessageEmbed } = require('discord.js'); //stole from stackoverflow can't use const discord = require("discord.js"); anymore :(
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] }); //??????????!?!?! what are intents please help me
+const client = new Client({ intents: [Intents.FLAGS.GUILDS],fetchAllMembers: true }); //??????????!?!?! what are intents please help me
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 require('dotenv').config();
@@ -12,6 +12,10 @@ const error1 = setTimeout(function () {
 
 //exports
 const workCooldown = new Map();
+
+function getGuild(id){
+	return client.guilds.get(id)
+}
 
 function constructEmbed(colour, content, user) {
 	return ({
@@ -54,6 +58,7 @@ function constructButtons(primaryText, secondaryText) {
 		);
 }
 
+
 function start() {
 	console.clear()
 	console.log("Loading... Please wait");
@@ -64,34 +69,17 @@ function start() {
 		console.log("Log:");
 		console.log("");
 		client.user.setActivity(fs.readFileSync("views/game.txt", "utf8")); 
+		profilePicture = client.user.avatarURL()
 	});
-
 	for (const file of commandFiles) {
 		const command = require(`./commands/${file}`);
 		client.commands.set(command.data.name, command);
 	}
 
 	client.on('interactionCreate', async interaction => {
-
-		//if interaction was a button press
-		/*
-		if (interaction.isButton()) {
-			const commands = new Object();
-			for (const file of commandFiles) {
-				commands[file] = (require(`./commands/${file}`));
-			}
-			switch (interaction.customId) {
-				case "Heads":
-				case "Tails":
-					commands["bet.js"].onPress(interaction)
-					break;
-			}
-		}
-		*/
 		//if interaction was a command
 		if (interaction.isCommand()) {
 			const command = client.commands.get(interaction.commandName);
-			console.log(command)
 			if (!command) return;
 
 			try {
@@ -105,4 +93,5 @@ function start() {
 	});
 	client.login(process.env.DISCORD_TOKEN);
 }
-module.exports = { workCooldown, constructEmbed, constructError, constructButtons, start };
+ 
+module.exports = { workCooldown, getGuild, constructEmbed, constructError, constructButtons, start };

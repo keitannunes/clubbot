@@ -13,7 +13,7 @@ module.exports = {
         const bet = interaction.options.getInteger('amount');
         let decision = interaction.options.getString('decision');
         if (!await db.signedUp(interaction.user.id)) { //if person is not signed up
-            return interaction.reply(bot.constructError('You are not signed up (use ,signup to signup)', interaction.user));
+            return interaction.reply(bot.constructError('You are not signed up (use /signup to signup)', interaction.user));
         } else {//if signed up
             const oldBalance = await db.getBalance(interaction.user.id);
             if (bet <= 0) {//if player bets a negative integer
@@ -25,12 +25,13 @@ module.exports = {
                 if (decision == 'Heads') choice = true
                 else  choice = false
                 const roll = Math.random() > 0.5;
+                console.log(roll)
                 if (roll == choice) {
                     await db.setBalance(interaction.user.id, oldBalance + bet); // add winnings to balance 
-                    return interaction.reply(bot.constructEmbed("#008000",`${decision}! You won $${bet}!`,interaction.user))
+                    return interaction.reply(bot.constructEmbed("#008000",`You guessed ${decision} correctly! You won $${functions.addCommas(bet)}!`,interaction.user))
                 } else {
                     await db.setBalance(interaction.user.id, oldBalance - bet); // deduct losses from balance
-                    return interaction.reply(bot.constructEmbed("#ff0000",`${decision}! You lost $${bet}!`,interaction.user))
+                    return interaction.reply(bot.constructEmbed("#ff0000",`You incorrectly guessed ${decision}! You lost $${functions.addCommas(bet)}!`,interaction.user))
                 }
             }
         }

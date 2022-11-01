@@ -5,5 +5,5 @@ module.exports = {
 		.setDescription('Check if bot is alive'),
 	async execute(interaction) {
 		await interaction.reply(`Pong! Bot is alive!`);
-	},
+	}
 };

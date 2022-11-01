@@ -13,9 +13,9 @@ module.exports = {
         else if (await db.signedUp(interaction.user.id)) {
             //determine income
             const rng = Math.random()
-            if (rng >= 0.9) {
+            if (rng >= 0.95) {
                 salary = Math.round((0.70 + Math.random()) * 10000)
-            } else if (0.9 > rng && rng >= 0.6) {
+            } else if (0.95 > rng && rng >= 0.6) {
                 salary = Math.round((Math.min(0.85, Math.max(0.6, Math.random()))) * 10000 + Math.random() * 1000)
             } else {
                 salary = Math.round((Math.min(0.55, Math.max(0.1, Math.random()))) * 10000 + Math.random() * 1000)
