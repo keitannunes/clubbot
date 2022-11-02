@@ -3,6 +3,7 @@ const { Client, Collection, Intents, MessageActionRow, MessageButton, MessageEmb
 const client = new Client({ intents: [Intents.FLAGS.GUILDS],fetchAllMembers: true }); //??????????!?!?! what are intents please help me
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
+const dmoj = require("./dmoj.js")
 require('dotenv').config();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 client.commands = new Collection();
@@ -71,6 +72,10 @@ function start() {
 		client.user.setActivity(fs.readFileSync("views/game.txt", "utf8")); 
 		profilePicture = client.user.avatarURL()
 	});
+
+	setInterval(() => dmoj.updatePoints(), 300000) //update dmoj points every 5 mins
+
+
 	for (const file of commandFiles) {
 		const command = require(`./commands/${file}`);
 		client.commands.set(command.data.name, command);
@@ -81,7 +86,6 @@ function start() {
 		if (interaction.isCommand()) {
 			const command = client.commands.get(interaction.commandName);
 			if (!command) return;
-
 			try {
 				await command.execute(interaction);
 			} catch (error) {
