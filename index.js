@@ -1,2 +1,2 @@
-const bot = require("./bot")
-bot.start()
+const bot = require("./bot");
+bot.start();

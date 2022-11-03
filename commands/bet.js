@@ -1,14 +1,22 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {SlashCommandBuilder} = require('@discordjs/builders');
 const functions = require("../functions");
-const bot = require("../bot")
-const db = require("../database")
+const bot = require("../bot");
+const db = require("../database");
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('bet')
         .setDescription('bet on a coin flip')
         .addIntegerOption(option => option.setName('amount').setDescription('Enter the bet amount').setRequired(true))
-        .addStringOption(option => option.setName("decision").setDescription('Either heads or tails').setRequired(true).addChoice('Heads','Heads').addChoice('Tails','Tails')), //this is awesome
+        .addStringOption(option =>
+            option.setName("decision")
+                .setDescription('Either heads or tails')
+                .setRequired(true)
+                .addChoices(
+            { name: 'Heads', value: 'Heads' },
+                    { name: 'Tails', value: 'Tails' },
+        )),
+
     async execute(interaction) {
         const bet = interaction.options.getInteger('amount');
         let decision = interaction.options.getString('decision');
@@ -22,18 +30,18 @@ module.exports = {
                 return interaction.reply(bot.constructError(`You have insufficient funds!`, interaction.user));
             } else {
                 //convert heads/tails to boolean values
-                if (decision == 'Heads') choice = true
-                else  choice = false
+                if (decision == 'Heads') choice = true;
+                else choice = false;
                 const roll = Math.random() > 0.5;
-                console.log(roll)
+                console.log(roll);
                 if (roll == choice) {
                     await db.setBalance(interaction.user.id, oldBalance + bet); // add winnings to balance 
-                    return interaction.reply(bot.constructEmbed("#008000",`You guessed ${decision} correctly! You won $${functions.addCommas(bet)}!`,interaction.user))
+                    return interaction.reply(bot.constructEmbed("#008000", `You guessed ${decision} correctly! You won $${functions.addCommas(bet)}!`, interaction.user));
                 } else {
                     await db.setBalance(interaction.user.id, oldBalance - bet); // deduct losses from balance
-                    return interaction.reply(bot.constructEmbed("#ff0000",`You incorrectly guessed ${decision}! You lost $${functions.addCommas(bet)}!`,interaction.user))
+                    return interaction.reply(bot.constructEmbed("#ff0000", `You incorrectly guessed ${decision}! You lost $${functions.addCommas(bet)}!`, interaction.user));
                 }
             }
         }
     }
-}
+};

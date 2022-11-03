@@ -7,4 +7,4 @@ function addCommas(x) {
 }
 
 
-module.exports = {rng , addCommas};
+module.exports = {rng, addCommas};

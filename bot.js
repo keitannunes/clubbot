@@ -73,7 +73,7 @@ function start() {
 		profilePicture = client.user.avatarURL()
 	});
 
-	setInterval(() => dmoj.updatePoints(), 300000) //update dmoj points every 5 mins
+	setInterval(() => dmoj.updatePoints(), 300000) //update dmoj points every 5
 
 
 	for (const file of commandFiles) {
