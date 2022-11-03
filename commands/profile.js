@@ -68,7 +68,7 @@ module.exports = {
                 url: `https://dmoj.ca/user/${dmojName}`,
                 fields: [
                     {
-                        name: 'Points',
+                        name: 'Points:',
                         value: `
                         Weighted: ${Math.round(account.performance_points)}
                         Total: ${Math.round(account.points)}`,
