@@ -7,7 +7,9 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('balance')
         .setDescription('Get the balance of the selected user, or your own balance.')
-        .addUserOption(option => option.setName('user').setDescription('The user\'s balance to show')),
+        .addUserOption(option =>
+            option.setName('user')
+                .setDescription('The user\'s balance to show')),
     async execute(interaction) {
         const user = interaction.options.getUser('user');
         if (user) {

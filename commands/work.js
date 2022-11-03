@@ -12,6 +12,7 @@ module.exports = {
         } else if (await db.signedUp(interaction.user.id)) {
             //determine income
             const rng = Math.random();
+            let salary;
             if (rng >= 0.95) {
                 salary = Math.round((0.70 + Math.random()) * 10000);
             } else if (0.95 > rng && rng >= 0.6) {
@@ -21,7 +22,7 @@ module.exports = {
             }
 
             const oldBalance = await db.getBalance(interaction.user.id);//get old balance
-            db.setBalance(interaction.user.id, oldBalance + salary); //add salary to balance
+            await db.setBalance(interaction.user.id, oldBalance + salary); //add salary to balance
 
             bot.workCooldown.set(interaction.user.id, Date.now()); //set cooldown start time
 

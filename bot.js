@@ -69,8 +69,7 @@ function start() {
 		console.log("");
 		console.log("Log:");
 		console.log("");
-		client.user.setActivity(fs.readFileSync("views/game.txt", "utf8")); 
-		profilePicture = client.user.avatarURL()
+		client.user.setActivity(fs.readFileSync("views/game.txt", "utf8"));
 	});
 
 	setInterval(() => dmoj.updatePoints(), 300000) //update dmoj points every 5

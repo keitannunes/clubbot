@@ -7,7 +7,10 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('bet')
         .setDescription('bet on a coin flip')
-        .addIntegerOption(option => option.setName('amount').setDescription('Enter the bet amount').setRequired(true))
+        .addIntegerOption(option =>
+            option.setName('amount')
+                .setDescription('Enter the bet amount')
+                .setRequired(true))
         .addStringOption(option =>
             option.setName("decision")
                 .setDescription('Either heads or tails')

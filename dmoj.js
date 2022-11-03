@@ -6,6 +6,15 @@ getUserPoints = async (name) => {
     return response.data.data.object.performance_points;
 };
 
+getUserProfile = async (name) => {
+    const response = await axios.get(`https://dmoj.ca/api/v2/user/${name}`);
+    return response.data.data.object;
+}
+
+getProblem = async (name) => {
+    const response = await axios.get(`https://dmoj.ca/api/v2/problem/${name}`);
+    return response.data.data.object;
+}
 checkUserExists = async (name) => {
     try {
         await axios.get(`https://dmoj.ca/api/v2/user/${name}`);
@@ -45,4 +54,4 @@ updatePoints = async () => {
 };
 
 
-module.exports = {getUserPoints, checkUserExists, checkDiscordUserLinked, getUsername, updatePoints};
+module.exports = {getUserPoints, getUserProfile, getProblem, checkUserExists, checkDiscordUserLinked, getUsername, updatePoints};
