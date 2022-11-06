@@ -12,8 +12,8 @@ module.exports = {
             option.setName('user')
                 .setDescription('Discord User')),
     async execute(interaction) {
-        let name = interaction.options.getString('name');
-        let user = interaction.options.getUser('user');
+        const name = interaction.options.getString('name');
+        const user = interaction.options.getUser('user');
         let dmojName;
         let authorName; //name used for Embed author
         let authorIcon;
