@@ -36,8 +36,9 @@ module.exports = {
             scope = "Local DMOJ";
             const file = fs.readFileSync('views/dmoj.json');
             const json = JSON.parse(file.toString());
+            const today = new Date()
             for (const property in json.guilds[interaction.guild.id]) {
-                unsortedTable.set(json.guilds[interaction.guild.id][property].name, Math.round(json.guilds[interaction.guild.id][property].points));
+                unsortedTable.set(json.guilds[interaction.guild.id][property].name, Math.round(json.guilds[interaction.guild.id][property].points[today.toJSON().split("T")[0]]));
             }
         } else {
             scope = "Global";

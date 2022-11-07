@@ -39,10 +39,11 @@ getUsername = async (id, guildID) => {
 updatePoints = async () => {
     const file = fs.readFileSync('views/dmoj.json');
     const json = JSON.parse(file.toString());
+    const today = new Date()
     try {
         for (let guild in json.guilds) {
             for (let username in json.guilds[guild]) {
-                json.guilds[guild][username].points = await getUserPoints(json.guilds[guild][username].name);
+                json.guilds[guild][username].points[today.toJSON().split("T")[0]] = await getUserPoints(json.guilds[guild][username].name);
             }
         }
         fs.writeFileSync("views/dmoj.json", JSON.stringify(json));

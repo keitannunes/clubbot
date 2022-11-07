@@ -73,6 +73,7 @@ function start() {
 	});
 
 	setInterval(() => dmoj.updatePoints(), 300000) //update dmoj points every 5
+	dmoj.updatePoints()
 
 
 	for (const file of commandFiles) {
