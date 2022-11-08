@@ -38,7 +38,7 @@ module.exports = {
             const json = JSON.parse(file.toString());
             const today = new Date()
             for (const property in json.guilds[interaction.guild.id]) {
-                unsortedTable.set(json.guilds[interaction.guild.id][property].name, Math.round(json.guilds[interaction.guild.id][property].points[today.toJSON().split("T")[0]]));
+                unsortedTable.set(`[${json.guilds[interaction.guild.id][property].name}](https://dmoj.ca/user/${json.guilds[interaction.guild.id][property].name})`, Math.round(json.guilds[interaction.guild.id][property].points[today.toJSON().split("T")[0]]));
             }
         } else {
             scope = "Global";
