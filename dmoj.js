@@ -3,7 +3,7 @@ const fs = require("fs");
 
 getUserPoints = async (name) => {
     const response = await axios.get(`https://dmoj.ca/api/v2/user/${name}`);
-    return response.data.data.object.performance_points;
+    return Math.round(response.data.data.object.performance_points*1000)/1000;
 };
 
 getUserProfile = async (name) => {
@@ -36,6 +36,18 @@ getUsername = async (id, guildID) => {
     return json.guilds[guildID][id].name;
 };
 
+updateUserPoints = async (id,guildID) => {
+    const file = fs.readFileSync('views/dmoj.json');
+    const json = JSON.parse(file.toString());
+    const today = new Date()
+    try {
+        json.guilds[guildID][id].points[today.toJSON().split("T")[0]] = await getUserPoints(json.guilds[guildID][id].name);
+        fs.writeFileSync("views/dmoj.json", JSON.stringify(json));
+        console.log("Successfully updated points");
+    } catch (err) {
+        console.log(err);
+    }
+}
 updatePoints = async () => {
     const file = fs.readFileSync('views/dmoj.json');
     const json = JSON.parse(file.toString());
@@ -62,5 +74,6 @@ module.exports = {
     checkUserExists,
     checkDiscordUserLinked,
     getUsername,
-    updatePoints
+    updatePoints,
+    updateUserPoints
 };
