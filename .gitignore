@@ -1,4 +1,5 @@
 .env
 node_modules/
-views/dmoj.json
-views/game.txt
+views/
+.idea/
+bruh.js
