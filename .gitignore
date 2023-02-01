@@ -4,3 +4,6 @@ node_modules/
 views/dmoj.json
 views/game.txt
 views/shoaib.txt
+views/
+.idea/
+bruh.js
