@@ -16,7 +16,7 @@ module.exports = {
             const today = new Date();
             let oldObj = JSON.parse(file.toString());
             let newObj;
-            newObj = {[UserID]: {"name": name, "points": {[today.toJSON().split("T")[0]]: await dmoj.getUserPoints(name)}}};
+            newObj = {[UserID]: {"name": name, "points": {[today.toJSON().split("T")[0]]: await dmoj.getUserPoints(name)}, "submissions": {"count": 0, "data" : {}}}};
             newGuild = {[guildID]: {...oldObj.guilds[guildID], ...newObj}};
             fs.writeFileSync("views/dmoj.json", JSON.stringify({"guilds": {...oldObj.guilds, ...{[guildID]: {...oldObj.guilds[guildID], ...newObj}}}}));
             return interaction.reply(bot.constructEmbed("00c8b2", `Success! ${interaction.user.username} has been succesfully linked to ${name}!`, interaction.user));
