@@ -5,13 +5,10 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('language')
         .setDescription('get language statistics of user')
-        .addStringOption(option =>
-            option.setName("name")
-                .setDescription('DMOJ Username'))
-        .addUserOption(option =>
-            option.setName('user')
-                .setDescription('Discord User')),
-    async execute(interaction) {
+        .addStringOption(option => option.setName("name")
+            .setDescription('DMOJ Username'))
+        .addUserOption(option => option.setName('user')
+            .setDescription('Discord User')), async execute(interaction) {
         const name = interaction.options.getString('name');
         const user = interaction.options.getUser('user');
         let authorName; //name used for Embed author
@@ -24,14 +21,19 @@ module.exports = {
                 authorName = name;
                 authorIcon = "https://avatars.githubusercontent.com/u/6934864?s=200&v=4";
 
-                const submissionData = await dmoj.getUserSubmissions(name);
-                data = {data : {}, count : submissionData.total_objects};
-                for (let i = 0; i < submissionData.total_objects; i++) {
+                let submissionData = await dmoj.getUserSubmissions(name, 1);
+                if (submissionData.total_pages !== 1) {
+                    submissionData = await dmoj.getUserSubmissions(name, submissionData.total_pages);
+                }
+                const numOfSubmissions = Math.min(1000, submissionData.current_object_count)
+                data = {data: {}, count: numOfSubmissions};
+                for (let i = 0; i < numOfSubmissions; i++) {
                     const curr = submissionData.objects[i].language;
                     if (!data.data.hasOwnProperty(curr)) {
                         data.data[curr] = 0;
                     }
                     data.data[curr]++;
+                    console.log(i);
                 }
             } else {
                 return interaction.reply(bot.constructError("User does not exist!", interaction.user));
@@ -39,11 +41,11 @@ module.exports = {
         } else if (user) {
             if (await dmoj.checkDiscordUserLinked(user.id, interaction.guild.id)) {
                 authorName = user.username;
-                authorIcon = user.avatarURL()
+                authorIcon = user.avatarURL();
                 dmojName = await dmoj.getUsername(user.id, interaction.guild.id);
 
-                await dmoj.cacheUserSubmissions(user.id,interaction.guild.id);
-                data = await dmoj.getCachedUserSubmissions(user.id,interaction.guild.id);
+                await dmoj.cacheUserSubmissions(user.id, interaction.guild.id);
+                data = await dmoj.getCachedUserSubmissions(user.id, interaction.guild.id);
             } else {
                 return interaction.reply(bot.constructError(`${user.username} has not linked their account to DMOJ!`, user));
             }
@@ -53,31 +55,27 @@ module.exports = {
                 authorIcon = interaction.user.avatarURL();
                 dmojName = await dmoj.getUsername(interaction.user.id, interaction.guild.id);
 
-                await dmoj.cacheUserSubmissions(interaction.user.id,interaction.guild.id);
-                data = await dmoj.getCachedUserSubmissions(interaction.user.id,interaction.guild.id);
+                await dmoj.cacheUserSubmissions(interaction.user.id, interaction.guild.id);
+                data = await dmoj.getCachedUserSubmissions(interaction.user.id, interaction.guild.id);
             } else {
                 return interaction.reply(bot.constructError(`You have not linked your account to DMOJ!`, interaction.user));
             }
         }
         const unsortedTable = new Map();
         for (const lang in data.data) {
-            unsortedTable.set(lang,data.data[lang]);
+            unsortedTable.set(lang, data.data[lang]);
         }
         const sortedTable = new Map([...unsortedTable.entries()].sort((a, b) => b[1] - a[1]));
 
         let returnString = "";
         sortedTable.forEach((count, lang) => {
-            returnString = returnString + `${lang}: ${Math.round((count/data.count)*1000)/10}%\n`;
+            returnString = returnString + `${lang}: ${Math.round((count / data.count) * 1000) / 10}%\n`;
         });
-
         return interaction.reply({
             embeds: [{
-                color: "00c8b2",
-                author: {
-                    name : `${dmojName}'s statistics`,
-                    icon_url: authorIcon,
-                },
-                description: returnString
+                color: "00c8b2", author: {
+                    name: `${dmojName}'s statistics`, icon_url: authorIcon,
+                }, description: returnString
             }]
         });
     }

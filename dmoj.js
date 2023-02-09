@@ -36,8 +36,8 @@ const getUsername = async (id, guildID) => {
     return json.guilds[guildID][id].name;
 };
 
-const getUserSubmissions = async (name) => {
-    const response = await axios.get(`https://dmoj.ca/api/v2/submissions?user=${name}`);
+const getUserSubmissions = async (name, page) => {
+    const response = await axios.get(`https://dmoj.ca/api/v2/submissions?user=${name}&page=${page}`);
     return response.data.data;
 }
 
@@ -45,14 +45,15 @@ const cacheUserSubmissions = async (id, guildID) => {
     const file = fs.readFileSync('views/dmoj.json');
     const json = JSON.parse(file.toString());
     const submissionData = await getUserSubmissions(json.guilds[guildID][id].name);
-    for (let i = submissionData.total_objects - 1; i >= json.guilds[guildID][id].submissions.count; i--) {
+    const numOfSubmissions = Math.min(1000, submissionData.total_objects)
+    for (let i = numOfSubmissions - 1; i >= json.guilds[guildID][id].submissions.count; i--) {
         const curr = submissionData.objects[i].language;
         if (!json.guilds[guildID][id].submissions.data.hasOwnProperty(curr)) {
             json.guilds[guildID][id].submissions.data[curr] = 0;
         }
         json.guilds[guildID][id].submissions.data[curr]++;
     }
-    json.guilds[guildID][id].submissions.count = submissionData.total_objects;
+    json.guilds[guildID][id].submissions.count = numOfSubmissions;
     try {
         fs.writeFileSync("views/dmoj.json", JSON.stringify(json));
     } catch (err) {
